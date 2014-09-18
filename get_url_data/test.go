@@ -20,6 +20,31 @@ type Urls struct {
 
 var totalUrls int
 
+func getUrlList(host string) Urls {
+	// request list of urls
+	fmt.Print("get urls.")
+	response, err := http.Get(host)
+	defer response.Body.Close()
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%s", err))
+	}
+	var contents []byte
+	contents, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%s", err))
+	}
+
+	// parse json response and get list of urls
+	var urls Urls
+	err = json.Unmarshal(contents, &urls)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%s", err))
+	}
+
+	fmt.Print("got urls.")
+	return urls
+}
+
 func requestUrls(urls Urls, cs chan string) {
 	totalUrls = len(urls.Urls)
 	for _, url := range urls.Urls {
@@ -70,36 +95,16 @@ func main() {
 	// set defaults
 	runtime.GOMAXPROCS(2)
 	totalUrls = 5
-	limit := string('5')
-	host := "http://coreinterview.sendgrid.net/sample?n=" + limit
+	host := "http://coreinterview.sendgrid.net/sample?n=" + strconv.Itoa(totalUrls)
 
-	fmt.Print("get urls.")
-
-	// request list of urls
-	response, err := http.Get(host)
-	defer response.Body.Close()
-	if err != nil {
-		log.Fatal(fmt.Sprintf("%s", err))
-	}
-	var contents []byte
-	contents, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("%s", err))
-	}
-
-	// parse json response and get list of urls
-	var urls Urls
-	err = json.Unmarshal(contents, &urls)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("%s", err))
-	}
-
-	fmt.Print("got urls.")
+	// get list of urls
+	urls := getUrlList(host)
 
 	// create channel for go routine to async call to get each url
 	cs := make(chan string)
+
 	fmt.Print("start.")
 	go requestUrls(urls, cs)
 	printResponse(cs)
-	fmt.Print(".end")
+	fmt.Println(".end")
 }
