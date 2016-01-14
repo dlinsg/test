@@ -1,9 +1,6 @@
 <?php
 require 'vendor/autoload.php';
 
-$sendgrid_username = 'dlintestapi';
-$sendgrid_password = 'testingapi123';
-
 $sendgrid = new SendGrid($sendgrid_username, $sendgrid_password, 
 	array("turn_off_ssl_verification" => true));
 $email    = new SendGrid\Email();
